@@ -9,18 +9,36 @@ import {
   Button,
 } from "react-bootstrap"
 import {io} from "socket.io-client"
+import {User, Message} from "../types"
 
-const socket = io("http://localhost:3002", {transports: ['websocket']})
+const socket = io("http://localhost:3001", {transports: ['websocket']})
 
 const Home = () => {
   const [username, setUsername] = useState("")
   const [message, setMessage] = useState("")
+  const [onlineUsers, setOnlineUsers] = useState<User[]>([])
+  const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
     socket.on("welcome", welcomeMessage => {
       console.log(welcomeMessage)
     })
+
+    socket.on("loggedIn", onlineUsersList => {
+      console.log(onlineUsersList)
+      setOnlineUsers(onlineUsersList)
+      setLoggedIn(true)
+    })
+
+    socket.on("updateOnlineUsersList", updatedList => {
+      setOnlineUsers(updatedList)
+    })
+
   })
+
+  const submitUsername = () => {
+    socket.emit("setUsername", {username})
+  }
 
   return (
     <Container fluid>
@@ -32,12 +50,14 @@ const Home = () => {
           <Form
             onSubmit={e => {
               e.preventDefault()
+              submitUsername()
             }}
           >
             <FormControl
               placeholder="Set your username here"
               value={username}
               onChange={e => setUsername(e.target.value)}
+              disabled={loggedIn}
             />
           </Form>
           {/* )} */}
