@@ -8,10 +8,19 @@ import {
   ListGroup,
   Button,
 } from "react-bootstrap"
+import {io} from "socket.io-client"
+
+const socket = io("http://localhost:3002", {transports: ['websocket']})
 
 const Home = () => {
   const [username, setUsername] = useState("")
   const [message, setMessage] = useState("")
+
+  useEffect(() => {
+    socket.on("welcome", welcomeMessage => {
+      console.log(welcomeMessage)
+    })
+  })
 
   return (
     <Container fluid>
