@@ -7,6 +7,7 @@ import {
   FormControl,
   ListGroup,
   Button,
+  ListGroupItem,
 } from "react-bootstrap"
 import {io} from "socket.io-client"
 import {User, Message} from "../types"
@@ -18,6 +19,7 @@ const Home = () => {
   const [message, setMessage] = useState("")
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
+  const [chatHistory, setChatHistory] = useState<Message[]>([])
 
   useEffect(() => {
     socket.on("welcome", welcomeMessage => {
@@ -32,13 +34,21 @@ const Home = () => {
 
     socket.on("updateOnlineUsersList", updatedList => {
       setOnlineUsers(updatedList)
-    })
+    }) 
 
+  
   })
 
   const submitUsername = () => {
     socket.emit("setUsername", {username})
   }
+
+  const sendMessage = () => {
+    const newMessage = {sender: username, text: message, createdAt: new Date().toLocaleString("en-gb")}
+    socket.emit("message", {message: newMessage})
+    setChatHistory( [...chatHistory, newMessage])
+  }
+
 
   return (
     <Container fluid>
@@ -62,11 +72,12 @@ const Home = () => {
           </Form>
           {/* )} */}
           {/* MIDDLE AREA: CHAT HISTORY */}
-          <ListGroup></ListGroup>
+          <ListGroup >{chatHistory.map((message, index) => (<ListGroupItem key={index}>{message.sender}<p>{message.text},{message.createdAt}</p></ListGroupItem> )) }</ListGroup>
           {/* BOTTOM AREA: NEW MESSAGE */}
           <Form
             onSubmit={e => {
               e.preventDefault()
+              sendMessage()
             }}
           >
             <FormControl
@@ -79,6 +90,11 @@ const Home = () => {
         <Col md={3}>
           {/* ONLINE USERS SECTION */}
           <div className="mb-3">Connected users:</div>
+          <ListGroup>
+          {onlineUsers.map( (User) => (
+            <ListGroupItem key={User.id}>{User.username}</ ListGroupItem>
+          ))}
+          </ListGroup>
         </Col>
       </Row>
     </Container>
